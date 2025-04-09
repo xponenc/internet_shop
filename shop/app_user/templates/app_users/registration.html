@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Регистрация{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'app_users/css/users.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Регистрация</h2>
+        </div>
+        <form class="registration__form form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for form in forms %}
+                {% include "widgets/_custom-form.html" %}
+            {% endfor %}
+            <div class="form__btn-block">
+                <button class="form__btn btn btn_reset" type="submit">Зарегистрироваться</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}
+
+{% block script %}
+<script src="{% static 'libs/jquery/jquery-3.6.0.min.js' %}"></script>
+
+<script>
+$(document).ready(function () {
+    $("#id_email").on("blur", function () {
+        let email = $(this).val().trim();  // Берём введённый email
+        if (!email) return;  // Если поле пустое — ничего не делаем
+
+        if (!validateEmail(email)) {  // Проверяем, корректный ли email
+            showMessage("Введите корректный email");
+            return;
+        } else {
+            $("#id_email").parent().find(".custom-field__error-message").remove();
+        };
+
+        $.ajax({
+            url: "{% url 'app_users:check-email' %}",  // URL эндпоинта проверки email
+            type: "GET",
+            data: { email: email },
+            success: function (response) {
+                console.log(response)
+                if (response.available) {
+                    $("#id_email").parent().find(".custom-field__error-message").remove();
+                } else {
+                    showMessage("Этот email уже занят",);
+                };
+            },
+            error: function () {
+                showMessage("Ошибка проверки email",);
+            }
+        });
+    });
+
+    function validateEmail(email) {
+        let re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return re.test(email);
+    }
+
+    function showMessage(message) {
+        let msg = `<span class="custom-field__error-message" aria-live="polite">${message}</span>`;
+        $("#id_email").parent().append(msg);
+
+        setTimeout(function () {
+            $("#id_email").parent().find(".custom-field__error-message").fadeOut();
+        }, 5000);
+    }
+});
+</script>
+{% endblock script %}

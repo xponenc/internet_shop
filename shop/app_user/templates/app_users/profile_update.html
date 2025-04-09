@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Профиль пользователя{% endblock title %}
+
+
+{% block css %}
+{% endblock css %}
+
+
+{% block content %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Профиль пользователя</h2>
+        </div>
+        <form class="registration__form form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% include "widgets/_custom-form.html" %}
+            <div class="form__btn-block">
+                <button class="form__btn btn btn_reset" type="submit">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+{% endblock script %}

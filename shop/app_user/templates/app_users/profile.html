@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load users_tag %}
+{% load blogs_tag %}
+{% load current_tag %}
+
+
+{% block title %}Профиль пользователя {{ user.get_full_name|default:user.username }}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/app_users/user.css' %}" rel="stylesheet">
+
+{% endblock css %}
+
+
+{% block content %}
+{% for message in messages %}
+    <p>{{ message }}</p>
+{% endfor %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Профиль пользователя {{ user.get_full_name|default:user.username }}</h2>
+            {% if "Обычный пользователь" in user.groups.all|join:", " %}
+                <span>Ваш аккаунт проходит проверку, после её завершения вы сможете создать блог</span>
+            {% endif %}
+        </div>
+        <div class="user__info">
+            <div class="user__avatar-wrapper">
+                {% if user.profile.avatar %}
+                    <img class="user__avatar" src="{{ user.profile.avatar.url }}" alt="Аватар">
+                {% else %}
+                    <img class="user__avatar" src="{% static 'imgs.avatar.png' %}" alt="Аватар">
+                {% endif %}
+            </div>
+            <div class="user__details user-details">
+                <h3 class="user-details__heading subheadings">Персональная информация</h3>
+                <div class="data">
+                    <dl class="data__item">
+                        <dt class="data__label">Имя пользователя</dt>
+                        <dd class="data__value">{{ user.username }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Имя</dt>
+                        <dd class="data__value">{{ user.first_name }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Фамилия</dt>
+                        <dd class="data__value">{{ user.last_name }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Электронная почта</dt>
+                        <dd class="data__value">{{ user.email }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Телефон</dt>
+                        <dd class="data__value">{{ user.profile.phone }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Дата рождения</dt>
+                        <dd class="data__value">{{ user.profile.birthdate }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Город проживания</dt>
+                        <dd class="data__value">{{ user.profile.location }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">О себе</dt>
+                        <dd class="data__value">{{ user.profile.bio|default:"Тайна" }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Верифицирован</dt>
+                        <dd class="data__value">{% if user.profile.is_verified == True %}Да{% else %}Нет{% endif %}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Роль</dt>
+                        <dd class="data__value">
+                            {% for group in user.groups.all %}
+                                <p>{{ group.name }}</p>
+                            {% endfor %}
+                        </dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Заведено блогов</dt>
+                        <dd class="data__value">{{ user.blog_set.all.count }}</dd>
+                    </dl>
+                    <dl class="data__item">
+                        <dt class="data__label">Опубликовано записей</dt>
+                        <dd class="data__value">{{ user.total_posts }}</dd>
+                    </dl>
+                </div>
+                <div class="btns">
+                    <a class="user__edit btn btn_reset btn_sipmle" href="{% url 'app_users:profile-update' user.profile.id %}">Редактировать профиль</a>
+                    {% if "Верифицированный пользователь" in user.groups.all|join:", " and user.blog_set.count < user.profile.max_blogs %}
+                        <a class="user__new-blog btn btn_reset btn_sipmle" href="{% url 'blogs:blog-create' %}">Создать новый блог</a>
+                    {% endif %} 
+                </div>
+            </div>
+        </div>
+        <div class="user__blogs user-blogs">
+        {% if "Верифицированный пользователь" in user.groups.all|join:", " %}
+            <h3 class="user-blogs__headings subheadings">Список ваших блогов</h3>
+            <ul class="user-blogs__list">
+            {% for blog in user.blog_set.all %}
+                <li class="user-blogs__item">
+                    <span class="user-blogs__name">{{ blog.name }}</span>
+                    <span class="user-blogs__name">Создан: {{ blog.created_at }}</span>
+                    <a class="link" href="{{ blog.get_absolute_url }}">Открыть</a>
+                    <a class="link" href="{% url 'blogs:blog-update' blog.id %}">Редактировать</a>
+                </li>
+            {% empty %}
+                <p>Тут пока пусто</p>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Ваш аккаунт проходит проверку, после её завершения вы сможете создать блог</p>
+        {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+{% endblock script %}
+
+

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Профиль пользователя{% endblock title %}
+
+
+{% block css %}
+{% endblock css %}
+
+
+{% block content %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Вы успешно вышли</h2>
+        </div>
+        <span>Для входа в систему нажмите <a href="{% url 'app_users:login' %}">Войти</a>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+{% endblock script %}
