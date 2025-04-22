@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load users_tag %}
-{% load blogs_tag %}
-{% load current_tag %}
 
 
 {% block title %}Профиль пользователя {{ user.get_full_name|default:user.username }}{% endblock title %}
 
 
 {% block css %}
-<link href="{% static 'css/app_users/user.css' %}" rel="stylesheet">
+<link href="{% static 'css/app_user/user.css' %}" rel="stylesheet">
 
 {% endblock css %}
 
@@ -91,31 +89,24 @@
                     </dl>
                 </div>
                 <div class="btns">
-                    <a class="user__edit btn btn_reset btn_sipmle" href="{% url 'app_users:profile-update' user.profile.id %}">Редактировать профиль</a>
                     {% if "Верифицированный пользователь" in user.groups.all|join:", " and user.blog_set.count < user.profile.max_blogs %}
                         <a class="user__new-blog btn btn_reset btn_sipmle" href="{% url 'blogs:blog-create' %}">Создать новый блог</a>
                     {% endif %} 
+                    <a class="user__delete-account btn btn_reset btn_sipmle" href="{% url 'app_user:delete_account' %}">Удалить аккаунт</a>
+                    <a class="user__delete-account btn btn_reset btn_sipmle" href="{% url 'app_user:change_password' %}">Сменить пароль</a>
                 </div>
             </div>
         </div>
         <div class="user__blogs user-blogs">
-        {% if "Верифицированный пользователь" in user.groups.all|join:", " %}
-            <h3 class="user-blogs__headings subheadings">Список ваших блогов</h3>
-            <ul class="user-blogs__list">
-            {% for blog in user.blog_set.all %}
-                <li class="user-blogs__item">
-                    <span class="user-blogs__name">{{ blog.name }}</span>
-                    <span class="user-blogs__name">Создан: {{ blog.created_at }}</span>
-                    <a class="link" href="{{ blog.get_absolute_url }}">Открыть</a>
-                    <a class="link" href="{% url 'blogs:blog-update' blog.id %}">Редактировать</a>
-                </li>
+            <h3>История заказов</h3>
+            <ul>
+            {% for order in orders %}
+                <li>Заказ #{{ order.id }} - Создан: {{ order.created_at }}</li>
             {% empty %}
-                <p>Тут пока пусто</p>
+                <li>Заказов пока нет</li>
             {% endfor %}
             </ul>
-        {% else %}
-            <p>Ваш аккаунт проходит проверку, после её завершения вы сможете создать блог</p>
-        {% endif %}
+            <a href="{% url 'app_user:delete_account' %}">Удалить аккаунт</a>
         </div>
     </div>
 </section>

@@ -1,0 +1,44 @@
+<nav class="nav">
+    <div class="nav__container container">
+        <ul class="nav__list ">
+            <li class="nav__item">
+                <a href="{% url 'app_user:feedback' %}" class="nav__link">Обратная связь</a>
+            </li>
+            <li class="nav__item">
+                <a href="{% url 'shop:products' %}" class="nav__link">Товары</a>
+            </li>
+            <li class="nav__item">
+                <a href="{% url 'shop:cart_view' %}" class="nav__link">Корзина</a>
+            </li>
+            {% if request.user.is_authenticated %}
+                <li class="nav__item">
+                    <a class="nav__link" href="{% url 'app_user:profile'  request.user.pk%}">
+                        {{ request.user.get_full_name|default:request.user.username }} Личный кабинет
+                    </a>
+                </li>
+                <li class="nav__item">
+                    <form action="{% url 'app_user:logout'%}" method="POST">
+                        {% csrf_token %}
+                        <button class="nav__link" type="submit">Выйти</button>
+                    </form>
+                </li>
+            {% else %}
+            <li class="nav__item">
+                <a class="nav__link" href="{% url 'app_user:login' %}?next={{request.path}}">Войти</a>
+            </li>
+            <li class="nav__item">
+                <a class="nav__link" href="{% url 'app_user:sigh-in' %}">Зарегистрироваться</a>
+            </li>
+            {% endif %}
+        </ul>
+        {% if not request.user.is_authenticated %}
+            <span class="nav__info">Для доступа к полному функционалу необходим вход в систему.</span>
+        {% endif %}
+        <div class="cart-info">
+            <a href="{% url 'shop:cart_view' %}"> Корзина
+                <p>Товаров в корзине: <span id="total_quantity">{{ context_cart.total_quantity|default:"0" }}</span></p>
+                <p>Сумма: <span id="total_price">{{ context_cart.total_price|default:"0"|floatformat:2 }}</span></p>
+            </a>
+        </div>
+    </div>
+</nav>

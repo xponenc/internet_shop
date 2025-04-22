@@ -23,7 +23,8 @@ from django.views.generic import RedirectView, TemplateView
 urlpatterns = [
     # path('', RedirectView.as_view(url=reverse_lazy("blogs:blogs"), permanent=True)),
     path('admin/', admin.site.urls),
-    path('users/', include('app_users.urls')),
+    path('', include('app_user.urls', namespace='app_user')),
+    path('', include('app_shop.urls')),
 ]
 
 if settings.DEBUG:

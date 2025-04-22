@@ -16,7 +16,7 @@
         <div class="user__header">
             <h2 class="user__heading">Обратная связь</h2>
         </div>
-        <form class="feedback__form form" method="post" action="{% url 'app_users:feedback' %}">
+        <form class="feedback__form form" method="post" action="{% url 'app_user:feedback' %}">
             {% csrf_token %}
             <div class="form__wrapper">
                 {% include "widgets/_custom-form.html" %}

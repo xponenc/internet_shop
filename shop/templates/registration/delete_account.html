@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Подтверждение удаления аккаунта{% endblock title %}
+
+{% block css %}
+    <link href="{% static 'css/app_user/user.css' %}" rel="stylesheet">
+{% endblock css %}
+
+{% block content %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Удаление аккаунта</h2>
+        </div>
+        <p>Вы уверены, что хотите удалить свой аккаунт? Это действие необратимо.</p>
+        <form method="post" action="{% url 'app_user:delete_account' %}">
+            {% csrf_token %}
+            <button class="user__delete-account btn btn_reset btn_sipmle" type="submit">Отправить письмо с подтверждением</button>
+        </form>
+        <a href="{% url 'app_user:profile'  request.user.pk%}">Вернуться в профиль</a>
+    </div>
+</section>
+
+{% endblock %}

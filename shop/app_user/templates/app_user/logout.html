@@ -6,6 +6,7 @@
 
 
 {% block css %}
+<link href="{% static 'css/app_user/user.css' %}" rel="stylesheet">
 {% endblock css %}
 
 
@@ -15,7 +16,7 @@
         <div class="user__header">
             <h2 class="user__heading">Вы успешно вышли</h2>
         </div>
-        <span>Для входа в систему нажмите <a href="{% url 'app_users:login' %}">Войти</a>
+        <span>Для входа в систему нажмите <a href="{% url 'app_user:login' %}">Войти</a>
     </div>
 </section>
 {% endblock content %}

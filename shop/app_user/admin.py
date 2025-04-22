@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group, User
 from django.utils.safestring import mark_safe
 
-from .models import Profile
+from .models import Profile, SiteUser
 
 
 class ProfileInline(admin.StackedInline):
@@ -54,41 +54,6 @@ class CustomUserAdmin(UserAdmin):
 
     is_verified.short_description = 'Верифицирован'
 
-    # @admin.action(
-    #     permissions=['verify'],
-    #     description='Админка - Верифицировать',
-    # )
-    def verify_user(self, request, queryset):
-        """Верифицировать пользователей"""
-        row_update = queryset.count()
-        for user in queryset:
-            group_verified = Group.objects.get(name='Верифицированный пользователь')
-            user.groups.add(group_verified)
-            group_simple = Group.objects.get(name='Обычный пользователь')
-            if group_simple in user.groups.all():
-                user.groups.remove(group_simple)
 
-            profile = Profile.objects.get(user=user)
-            profile.is_verified = True
-            profile.save(update_fields=['is_verified'])
-        if row_update == 1:
-            message_bit = "Один пользователь верифицирован"
-        else:
-            message_bit = f"{row_update} пользователей верифицированы"
-        self.message_user(request, f"{message_bit}")
-
-    verify_user.short_description = "Админка - Верифицировать"
-    verify_user.allowed_permissions = ['verify']
-
-    def has_verify_permission(self, request):
-        # print("Проверка прав")
-        opts = self.opts
-        # print(opts)
-        codename = get_permission_codename('change', opts)
-        # print(request.user.has_perm('%s.%s' % (opts.app_label, codename)))
-        return request.user.has_perm('%s.%s' % (opts.app_label, codename))
-
-
-admin.site.unregister(User)
-admin.site.register(User, CustomUserAdmin)
+admin.site.register(SiteUser, CustomUserAdmin)
 admin.site.register(Profile)

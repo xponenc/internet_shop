@@ -6,7 +6,7 @@
 
 
 {% block css %}
-<link href="{% static 'app_users/css/users.css' %}" rel="stylesheet">
+<link href="{% static 'app_user/css/users.css' %}" rel="stylesheet">
 {% endblock css %}
 
 
@@ -46,7 +46,7 @@ $(document).ready(function () {
         };
 
         $.ajax({
-            url: "{% url 'app_users:check-email' %}",  // URL эндпоинта проверки email
+            url: "{% url 'app_user:check-email' %}",  // URL эндпоинта проверки email
             type: "GET",
             data: { email: email },
             success: function (response) {

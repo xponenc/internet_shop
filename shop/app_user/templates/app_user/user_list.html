@@ -35,7 +35,7 @@
         </td>
          <td>
              {% if user.profile.is_verified != True %}
-             <a class="btn" href="{% url 'app_users:verify' user.id %}">Верифицировать</a> {{ perms.app_users.verify }}
+             <a class="btn" href="{% url 'app_user:verify' user.id %}">Верифицировать</a> {{ perms.app_user.verify }}
              {% endif %}
          </td>
     </tr>

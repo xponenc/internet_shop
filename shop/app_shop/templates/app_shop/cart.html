@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Корзина{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+<section class="cart">
+    <div class="cart__container container">
+        <div class="cart__header">
+            <h2 class="products__heading">Корзина</h2>
+        </div>
+        <ul class="cart__list">
+            {% for cart_item in cart_items %}
+                <li class="cart__item cart-item">
+                    <a href="{{ cart_item.product.get_absolute_url }}" class="cart-item__link">
+                        <h3 class="cart-item__heading">{{ cart_item.product.name }}</h3>
+                        <span class="cart-item__price">₽ {{ cart_item.product.price|stringformat:"s" }}</span>
+                    </a>
+                    <p class="cart-item__quantity">{{ cart_item.quantity }}</p>
+                    <p class="cart-item__cost">{{ cart_item.cost|floatformat:2 }}</p>
+                    <form class="cart-item__remove-from-cart" action="{% url 'shop:remove_from_cart' cart_item.product.id %}" method="POST" onsubmit="removeProductFromCart(event)">
+                        {% csrf_token %}
+                        <button class="btn btn_reset btn_round" type="submit">
+                            удалить
+                        </button>
+                    </form>
+                </li>            
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+<script>
+    const totalPrice = document.querySelector('#total_price');
+    const totalQuantity = document.querySelector('#total_quantity');
+
+    function removeProductFromCart(event) {
+        event.preventDefault();
+        const actionForm = event.target;
+        const actionFormBtn = actionForm.querySelector('.btn');
+        actionFormBtn.disabled = true;
+        const formData = new FormData(actionForm);
+        fetch(actionForm.action, {
+            method: 'POST',
+            url: this.url,
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                totalPrice.textContent = parseFloat(data.total_price).toFixed(2);
+                totalQuantity.textContent = data.total_quantity;
+                actionFormBtn.closest(".cart-item").remove();
+
+            }
+        });
+        actionFormBtn.disabled = false;
+    };
+    </script>
+{% endblock script %}

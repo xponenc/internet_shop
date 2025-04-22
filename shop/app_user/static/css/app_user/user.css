@@ -1,8 +1,11 @@
 .user {}
 
-.user__container {}
-
-.container {}
+.user__container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
 
 .user__header {
     margin-bottom: var(--standard-gap);
@@ -35,7 +38,7 @@
 }
 
 .user__details {
-   
+
     grid-column: 2 / span 2;
     border: 1px solid var(--accent-bg-color);
     border-radius: 0 8px 8px 0;
@@ -74,16 +77,6 @@
 
 .data__value {}
 
-.btns {
-    padding: 10px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--standard-gap);
-}
-
-.btn {}
-
-.btn_reset {}
 
 .btn_sipmle {}
 

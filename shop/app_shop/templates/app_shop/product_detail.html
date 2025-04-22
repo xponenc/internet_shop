@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}{{ product.name }}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="product__wrapper">
+            <ul class="product__images">
+                {% for image in product.productimage_set.all %}
+                    <li class="product__image product-image{% if forloop.counter|divisibleby:3 %} product-image_big{% endif %}">
+                        <img src="{{ image.file.url }}" alt="Изображение товара {{ product.name }}" class="product-image__image">
+                    </li>            
+                {% endfor %}
+            </ul>
+            <div class="product__info">
+                <div class="product__header">
+                    <h2 class="product__heading">{{ product.name }}</h2>
+                </div>
+                <span class="product__price">₽ {{ product.price|stringformat:"s" }}</span>
+                <p class="product__description">{{ product.description }}</p>
+                <button class="product__buy" type="button">Купить</button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

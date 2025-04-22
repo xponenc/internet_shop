@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-danger">
+        <h4>Ошибка активации</h4>
+        <p>Ссылка активации недействительна или устарела.</p>
+        <p>Пожалуйста, запросите новую ссылку или обратитесь в поддержку.</p>
+        <a href="{% url 'app_user:sigh-in' %}" class="btn btn-primary">Зарегистрироваться снова</a>
+    </div>
+</div>
+{% endblock %}

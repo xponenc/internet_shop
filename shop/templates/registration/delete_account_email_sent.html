@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Страница авторизации{% endblock title %}
+
+{% block css %}
+    <link href="{% static 'css/app_user/user.css' %}" rel="stylesheet">
+{% endblock css %}
+
+{% block content %}
+<section class="user">
+    <div class="user__container container">
+        <div class="user__header">
+            <h2 class="user__heading">Письмо с подтверждением отправлено</h2>
+        </div>
+        <p>Мы отправили вам письмо с ссылкой для подтверждения удаления аккаунта. Пожалуйста, проверьте вашу почту (включая папку "Спам").</p>
+        <a href="{% url 'app_user:profile'  request.user.pk%}">Вернуться в профиль</a>
+    </div>
+</section>
+
+{% endblock %}
