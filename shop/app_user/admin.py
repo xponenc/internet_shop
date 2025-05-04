@@ -26,9 +26,10 @@ class ProfileInline(admin.StackedInline):
 class CustomUserAdmin(UserAdmin):
     inlines = (ProfileInline,)
     list_display = (
-    'username', 'email', 'first_name', 'last_name', 'is_staff', 'get_location', 'is_verified', 'get_avatar')
+        'email', 'first_name', 'last_name', 'is_staff', 'get_location', 'is_verified', 'get_avatar')
     list_select_related = ('profile',)  # добавление profile убирает ненужные запросы к БД
     actions = ('verify_user',)
+    ordering = ['email']  # Изменено с 'username' на 'email'
 
     def get_inline_instances(self, request, obj=None):
         """Метод переписывается для отображения inline в просмотровом режиме"""

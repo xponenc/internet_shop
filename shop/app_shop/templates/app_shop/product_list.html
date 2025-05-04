@@ -19,29 +19,13 @@
     <div class="products__container container">
         <div class="products__header">
             <h2 class="products__heading">Товары</h2>
+            <form id="filter-form" >
+                {{ filter_ordering_form.as_p }}
+            </form>
         </div>
-        {% include 'include/pagination.html' %}
-        <ul class="products__list">
-            {% for product in product_list %}
-                <li class="products__item product-item">
-                    <a href="{{ product.get_absolute_url }}" class="product-item__link">
-                        <img src="{{ product.first_image_url }}" alt="Изображение товара {{ product.name }}" class="product-item__image">
-                        <h3 class="product-item__heading">{{ product.name }}</h3>
-                        <p class="product-item__description">{{ product.description|truncatechars:120 }}</p>
-                        <span class="product-item__price">₽ {{ product.price|stringformat:"s" }}</span>
-                    </a>
-                    <form class="product-item__add-to-cart" action="{% url 'shop:add_to_cart' product.id  1 %}" method="POST" onsubmit="AddProductToCart(event)">
-                        {% csrf_token %}
-                        <button class="btn btn_reset btn_round" type="submit">
-                            <svg class="btn__icon">
-                                <use xlink:href="{% static 'images/sprite.svg' %}#cart"></use>
-                            </svg>
-                        </button>
-                    </form>
-                </li>            
-            {% endfor %}
-        </ul>
-        {% include 'include/pagination.html' %}
+        <div id="product-list">
+            {% include 'app_shop/include/_body-product-list.html' %}
+        </div>
     </div>
 </section>
 {% endblock content %}
@@ -49,6 +33,40 @@
 
 {% block script %}
 <script>
+    const filterOrderForm = document.querySelector('#filter-form');
+    const productsContainer = document.querySelector('#product-list');
+
+    filterOrderForm.addEventListener('change', function (e) {
+        e.preventDefault();
+        const formData = new FormData(filterOrderForm);
+        const params = new URLSearchParams(formData).toString();
+        const url = `?${params}`;
+        updateProductList(url);
+    });
+
+    productsContainer.addEventListener('click', function (e) {
+        if (e.target.classList === 'pagination__link') {
+            e.preventDefault();
+            const url = e.target.href;
+            updateProductList(url);
+        }
+    });
+
+    function updateProductList(url) {
+        fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'  // <-- добавляем заголовок
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                productsContainer.innerHTML = data.html;
+                window.history.pushState(null, '', url); // Обновляем URL
+            })
+            .catch(err => console.error('Ошибка загрузки данных:', err));
+    }
+
     const totalPrice = document.querySelector('#total_price');
     const totalQuantity = document.querySelector('#total_quantity');
 

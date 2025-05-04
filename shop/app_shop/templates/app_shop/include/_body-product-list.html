@@ -1,0 +1,25 @@
+{% load static %}
+
+{% include 'include/pagination.html' %}
+<ul class="products__list">
+    {% for product in page_obj %}
+        <li class="products__item product-item">
+            <a href="{{ product.get_absolute_url }}" class="product-item__link">
+                <img src="{{ product.first_image_url }}" alt="Изображение товара {{ product.name }}" class="product-item__image">
+                <h3 class="product-item__heading">{{ product.name }}</h3>
+                <h3 class="product-item__category">{{ product.category.name }} </h3>
+                <p class="product-item__description">{{ product.description|truncatechars:120 }}</p>
+                <span class="product-item__price">₽ {{ product.price|stringformat:"s" }}</span>
+            </a>
+            <form class="product-item__add-to-cart" action="{% url 'shop:add_to_cart' product.id  1 %}" method="POST" onsubmit="AddProductToCart(event)">
+                {% csrf_token %}
+                <button class="btn btn_reset btn_round" type="submit">
+                    <svg class="btn__icon">
+                        <use xlink:href="{% static 'images/sprite.svg' %}#cart"></use>
+                    </svg>
+                </button>
+            </form>
+        </li>
+    {% endfor %}
+</ul>
+{% include 'include/pagination.html' %}

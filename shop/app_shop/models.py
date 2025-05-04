@@ -4,12 +4,27 @@ from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.urls import reverse
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 
 from app_user.models import SiteUser
 
 
+class Category(MPTTModel):
+    """Модель Категория"""
+    name = models.CharField(max_length=100)
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     """Модель Товара"""
+    category = models.ForeignKey("Category", verbose_name="категория", on_delete=models.CASCADE)
     name = models.CharField(verbose_name="название", max_length=200, unique=True)
     description = models.TextField(verbose_name="описание")
     price = models.DecimalField(verbose_name="цена", max_digits=10, decimal_places=2)
@@ -58,8 +73,8 @@ class ProductImage(models.Model):
 @receiver(pre_delete, sender=ProductImage)
 def image_model_delete(sender, instance, **kwargs):
     """Физическое удаление файлов при удалении экземпляра модели"""
-    if instance.image.name:
-        instance.image.delete(False)
+    if instance.file.name:
+        instance.file.delete(False)
 
 
 class Cart(models.Model):
@@ -78,3 +93,21 @@ class CartItem(models.Model):
 
     objects = models.Manager()
 
+
+class Order(models.Model):
+    """Модель заказа"""
+    user = models.ForeignKey(SiteUser, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Заказ {self.id} от {self.user}"
+
+
+class OrderItem(models.Model):
+    """Модель Позиция в заказе"""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name}"

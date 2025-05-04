@@ -17,6 +17,7 @@ class CustomUserManager(UserManager):
 
 class SiteUser(AbstractUser):
     """Модель пользователя на сайте"""
+    username = None  # <-- полностью отключаем это поле
     email = models.EmailField(unique=True, verbose_name='Email')
     phone_regex = RegexValidator(regex=r'^((\+7)+([0-9]){10})$',
                                  message="Телефонный номер должен быть введен в формате: '+79991234567'.")
@@ -44,7 +45,7 @@ class Profile(models.Model):
         if self.user.first_name and self.user.last_name:
             user = '_'.join([self.user.first_name, self.user.last_name, 'avatar'])
         else:
-            user = '_' + self.user.username + 'avatar'
+            user = '_' + self.user.email.split('@')[0]
         return os.path.sep.join(['users', f'user-id-{self.user.id}', 'avatars', user + ".jpg"])
 
     def validate_date_in_past(value):
