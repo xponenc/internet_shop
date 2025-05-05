@@ -1,24 +1,27 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.paginator import Paginator
-from django.db.models import Prefetch, OuterRef, Subquery, Value, CharField, Sum, F
+from django.db.models import Prefetch, OuterRef, Subquery, Value, CharField, Sum, F, Count, Q, Min, Max, Avg
 from django.db.models.functions import Concat
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views import View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
-from .forms import ProductFilterForm
-from .models import Product, ProductImage, CartItem
+from .forms import ProductFilterForm, ProductForm, CategoryForm
+from .models import Product, ProductImage, CartItem, Category
 from .services.session_cart import SessionCart, get_cart_info, get_cart_items
 
 
 class ProductListView(ListView):
     """Списковое отображение модели Product"""
     model = Product
-    queryset = Product.objects.filter(draft=False)
+    queryset = Product.objects.filter(draft=False, deleted_at__isnull=True)
     paginate_by = 9
 
     def get_queryset(self):
@@ -45,7 +48,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
             Value(settings.MEDIA_URL),  # Добавляем MEDIA_URL перед путем
             Subquery(first_image_subquery, output_field=CharField())
         )
-    )
+    ).filter(draft=False, deleted_at__isnull=True)
 
     if filter_ordering_form.is_valid():
         cd = filter_ordering_form.cleaned_data
@@ -118,6 +121,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
 class ProductDetailView(DetailView):
     """Детальное отображение модели Product"""
     model = Product
+    queryset = Product.objects.filter(draft=False, deleted_at__isnull=True)
 
 
 def product_detail(request: HttpRequest, *args, **kwargs) -> HttpResponse:
@@ -129,6 +133,93 @@ def product_detail(request: HttpRequest, *args, **kwargs) -> HttpResponse:
     return render(request=request,
                   template_name="app_shop/product_detail.html",
                   context=context)
+
+
+class ProductCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Создание Товара :models:app_shop.Product"""
+    model = Product
+    permission_required = "app_shop.add_product"
+    form_class = ProductForm
+    template_name = "app_shop/product_form.html"
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        self.object = form.save()
+        images = self.request.FILES.getlist('images')
+        for image in images:
+            ProductImage.objects.create(product=self.object, file=image, author=self.request.user)
+        return redirect(self.get_success_url())
+
+
+class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Редактирование Товара :models:app_shop.Product"""
+    model = Product
+    permission_required = "app_shop.change_product"
+    form_class = ProductForm
+    template_name = "app_shop/product_form.html"
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        self.object = form.save()
+        images = self.request.FILES.getlist('images')
+        for image in images:
+            ProductImage.objects.create(product=self.object, file=image, author=self.request.user)
+        return redirect(self.get_success_url())
+
+
+class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """Удаление Товара :models:app_shop.Product"""
+    model = Product
+    permission_required = "app_shop.delete_product"
+    success_url = reverse_lazy('shop:products')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        print(self.object)
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        # return redirect(self.get_success_url())
+
+        return HttpResponseRedirect(self.success_url)
+
+
+class ProductImageDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Удаление Изображения Товара :models:app_shop.ProductImage"""
+    permission_required = "app_shop.delete_productimage"
+
+    def post(self, request, pk):
+        image = get_object_or_404(ProductImage, pk=pk)
+        if image.author == request.user or request.user.has_perm('app_shop.delete_productimage'):
+            image.delete()
+            return JsonResponse({"status": "deleted"})
+        else:
+            return JsonResponse({"status": "error", "message": "Недостаточно прав"}, status=403)
+
+
+class ProductJsonSearchView(View):
+    """Поиск товара по имени"""
+
+    def get(self, request):
+        query = request.GET.get('q', '').strip()
+        print(query)
+
+        if not query:
+            return JsonResponse([], safe=False)
+
+        products = Product.objects.filter(name__icontains=query).order_by("name").values('id', 'name', )[:10]
+        return JsonResponse(list(products), safe=False)
+
+
+class ProductSetCategoryView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Изменение категории товара/ привязывание товара к Категории"""
+    permission_required = "app_shop.change_product"
+
+    def post(self, request, product_pk, category_pk):
+        product = get_object_or_404(Product, pk=product_pk)
+        category = get_object_or_404(Category, pk= category_pk)
+        product.category = category
+        product.save(update_fields=["category", ])
+        return JsonResponse({"status": "changed"})
 
 
 def add_to_cart(request, product_id, quantity):
@@ -189,3 +280,70 @@ def remove_from_cart(request, product_id):
         'total_price': cart_info["total_price"],
         'total_quantity': cart_info["total_quantity"],
     })
+
+
+class CategoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    """Детальный просмотр Категории :models:app_shop.Category"""
+    model = Category
+    permission_required = "app_shop.view_category"
+    template_name = "app_shop/category_detail.html"
+    queryset = Category.objects.annotate(product_counter=Count("product"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category = self.object
+        subtree = category.get_descendants(include_self=True).annotate(product_counter=Count("product"))
+        context["subtree"] = subtree
+        return context
+
+
+class CategoryListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Списковый древовидный просмотр Категорий :models:app_shop.Category"""
+    model = Category
+    permission_required = "app_shop.view_category"
+    template_name = "app_shop/category_list.html"
+    queryset = (Category.objects.all()
+                .annotate(
+        product_counter=Count("product"),
+        product_total_cost=Sum("product__price"),
+        min_price=Min("product__price"),
+        max_price=Max("product__price"),
+        avg_price=Avg("product__price"),
+
+    ))
+
+
+class CategoryCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Создание Категории :models:app_shop.Category"""
+    model = Product
+    permission_required = "app:shop.add_catagory"
+    form_class = CategoryForm
+    template_name = "app_shop/category_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_list = Category.objects.all()
+        context["category_list"] = category_list
+        return context
+
+
+class CategoryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Редактирование Категории :models:app_shop.Category"""
+    model = Category
+    permission_required = "app_shop.update_product"
+    form_class = CategoryForm
+    template_name = "app_shop/category_form.html"
+
+
+class CategoryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """Удаление Категории :models:app_shop.Category"""
+    model = Category
+    permission_required = "app_shop.delete_category"
+    success_url = reverse_lazy('shop:products')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category = self.object
+        subtree = category.get_descendants(include_self=True).annotate(product_counter=Count("product"))
+        context["subtree"] = subtree
+        return context

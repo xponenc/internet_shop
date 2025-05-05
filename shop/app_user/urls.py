@@ -1,7 +1,7 @@
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, \
     PasswordResetView
 from django.urls import path, reverse_lazy
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from django.contrib.auth import views as auth_views
 
 from .views import UserLogin, UserLogout, UserRegistration, UserListView, \

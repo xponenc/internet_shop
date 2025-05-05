@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mptt_tags %}
+
+
+{% block title %}{% if product %}Редактирование {{ product.name }}{% else %}Создание категории{% endif %}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="products__header">
+            <h2 class="products__heading">{% if product %}Редактирование {{ product.name }}{% else %}Создание категории{% endif %}</h2>
+        </div>
+        {% if category_list %}
+            <div class="products__header">
+                <h2 class="product__heading">Дерево категорий</h2>
+            </div>
+            <div class="product__wrapper">
+                <ul>
+                    {% recursetree category_list %}
+                        <li>
+                            <a href="{% url 'shop:category-detail' node.id %}">{{ node.name }}</a>
+                            {% if not node.is_leaf_node %}
+                                <ul class="children" style="padding-left:20px;">
+                                    {{ children }}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% endrecursetree %}
+                </ul>
+            </div>
+        {% endif %}
+        <form action="" method="POST" class="product__form">
+            {% csrf_token %}
+            <!-- Error messaging -->
+            {% if form.errors %}
+            <ul class="form__errors" id="errors_{{ form.prefix }}">
+                <li class="form__error">Форма заполнена некорректно. Пожалуйста, исправьте:</li>
+                {% for error in form.non_field_errors %}
+                    <li class="form__error">{{ error|striptags }}</li>
+                {% endfor %}
+                {% for field in form %}
+                    {% if field.errors %}   
+                        {% for error in field.errors %}
+                        <li class="form__error">{{ field.label }}: {{ error|striptags }}</li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <!-- /Error messaging -->
+            <div class="form__container">
+                {% for field in form %}
+                    <div class="field-container just-validate-tooltip-container{% if 'custom-field__input_wide' in field.field.widget.attrs.class %} field-container_wide{% endif %}">
+                        {% include "widgets/_custom-field__input-placeholder-widget.html" %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="btns">
+                <button type="submit" class="btn btn_reset btn_simple">
+                    {% if category %}Сохранить{% else %}Создать{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+{% endblock script %}

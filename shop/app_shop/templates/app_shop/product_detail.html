@@ -17,6 +17,20 @@
 {% endif %} {% endcomment %}
 <section class="product">
     <div class="product__container container">
+        <div class="products__header">
+            <div class="btns">
+                {% if perms.app_shop.change_product %}
+                    <a class="btn btn_reset btn_simple" href="{% url 'shop:product-update' product.pk %}">
+                        редактировать
+                    </a>
+                {% endif %}
+                {% if perms.app_shop.delete_product %}
+                    <a class="btn btn_reset btn_simple btn_danger" href="{% url 'shop:product-delete' product.pk %}">
+                        удалить
+                    </a>
+                {% endif %}
+            </div>
+        </div>
         <div class="product__wrapper">
             <ul class="product__images">
                 {% for image in product.productimage_set.all %}

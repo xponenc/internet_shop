@@ -1,5 +1,6 @@
 import os
 
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -12,8 +13,10 @@ from app_user.models import SiteUser
 
 class Category(MPTTModel):
     """Модель Категория"""
-    name = models.CharField(max_length=100)
-    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    name = models.CharField(verbose_name="название", max_length=100)
+    parent = TreeForeignKey('self', verbose_name="головная категория",
+                            on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    deleted_at = models.DateTimeField(verbose_name="дата удаления", blank=True, null=True)
 
     class MPTTMeta:
         order_insertion_by = ['name']
@@ -21,13 +24,17 @@ class Category(MPTTModel):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse("shop:category-detail", args=(self.pk, ))
+
 
 class Product(models.Model):
     """Модель Товара"""
     category = models.ForeignKey("Category", verbose_name="категория", on_delete=models.CASCADE)
     name = models.CharField(verbose_name="название", max_length=200, unique=True)
     description = models.TextField(verbose_name="описание")
-    price = models.DecimalField(verbose_name="цена", max_digits=10, decimal_places=2)
+    price = models.DecimalField(verbose_name="цена", max_digits=10, decimal_places=2,
+                                validators=[MinValueValidator(0)])
     draft = models.BooleanField(verbose_name="удален", default=False)
     author = models.ForeignKey(SiteUser, verbose_name="создал/изменил", on_delete=models.PROTECT)
     created_at = models.DateTimeField(verbose_name="дата создания", auto_now_add=True)
@@ -45,7 +52,7 @@ class Product(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('shop:products-detail', args=[str(self.id)])
+        return reverse('shop:product-detail', args=[str(self.id)])
 
 
 class ProductImage(models.Model):

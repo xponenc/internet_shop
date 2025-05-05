@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mptt_tags %}
+
+
+{% block title %}Дерево категорий{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="products__header">
+            <h2 class="product__heading">Дерево категорий</h2>
+        </div>
+        <div class="product__wrapper">
+            <ul>
+                {% recursetree category_list %}
+                    <li>
+                        <a href="{% url 'shop:category-detail' node.id %}">{{ node.name }} — {{ node.product_counter }} товар(ов)</a>
+                        <div style="padding:10px 20px;">
+                            <p>Общая стоимость товаров: {{ node.product_total_cost|floatformat:2 }}</p>
+                            <p>Минимальная цена: {{ node.min_price|floatformat:2 }}</p>
+                            <p>Максимальная цена: {{ node.max_price|floatformat:2 }}</p>
+                            <p>Средняя цена: {{ node.avg_price|floatformat:2 }}</p>
+                        </div>
+                        {% if not node.is_leaf_node %}
+                            <ul class="children" style="padding-left:20px;">
+                                {{ children }}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endrecursetree %}
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock content %}

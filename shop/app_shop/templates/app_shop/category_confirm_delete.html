@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mptt_tags %}
+
+
+{% block title %}Удаление {{ category.name }}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="products__header">
+            <h2 class="products__heading">Удалить категорию</h2>
+        </div>
+        <p>Вы уверены, что хотите удалить категорию "{{ product.name }}"?
+            Это действие удалит категорию.</p>
+            {% if subtree %}
+                <div>
+                    <p>ВНИМАНИЕ! Будут удалены подкатегории с товарами:</p>
+                    <ul>
+                        {% recursetree subtree %}
+                            <li>
+                                <a href="{% url 'shop:category-detail' node.id %}">{{ node.name }} — {{ node.product_counter }} товар(ов)</a>
+                                {% if not node.is_leaf_node %}
+                                    <ul class="children" style="padding-left:20px;">
+                                        {{ children }}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endrecursetree %}
+                    </ul>
+                </div>
+            {% endif %}
+            <form method="POST" action="{% url 'shop:category-delete' object.pk %}">
+            {% csrf_token %}
+            <div class="btns">
+                <button type="submit" class="btn btn_reset btn_simple btn_danger">Подтвердить удаление</button>
+                <a href="{% url 'shop:category-detail' object.pk %}" class="btn btn_reset btn_simple">Отмена</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}

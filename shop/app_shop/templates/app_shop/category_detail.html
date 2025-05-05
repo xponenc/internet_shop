@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mptt_tags %}
+
+
+{% block title %}Категория {{ category.name }}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="products__header">
+            <h2 class="product__heading">Категория {{ category.name }}</h2>
+            <div class="btns">
+                {% if perms.app_shop.change_category %}
+                    <a class="btn btn_reset btn_simple" href="{% url 'shop:category-update' category.pk %}">
+                        редактировать
+                    </a>
+                {% endif %}
+                {% if perms.app_shop.delete_category %}
+                    <a class="btn btn_reset btn_simple btn_danger" href="{% url 'shop:category-delete' category.pk %}">
+                        удалить
+                    </a>
+                {% endif %}
+                <a href="{% url 'shop:category-list' %}">Все категории</a>
+            </div>
+        </div>
+        <p>Головная категория: {{ category.parent.name|default:"Нет" }}</p>
+        <p>Количество товаров в категории: {{ category.product_counter }}</p>
+        <p>
+            {% if object.get_descendants %}
+            <h2>Дерево категорий</h2>
+
+            <ul>
+                {% recursetree subtree %}
+                    <li>
+                        <a href="{% url 'shop:category-detail' node.id %}">{{ node.name }} — {{ node.product_counter }} товар(ов)</a>
+                        {% if not node.is_leaf_node %}
+                            <ul class="children" style="padding-left:20px;">
+                                {{ children }}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endrecursetree %}
+            </ul>
+        {% else %}
+            <p>Нет подкатегорий.</p>
+        {% endif %}
+        </p>
+        <p>Привязать товар к категории</p>
+        <form id="set-category" action="{% url 'shop:product-set-category' 0 category.id %}">
+            {% csrf_token %}
+            <input type="text" hidden name="product" id="id_product"/>
+        </form>
+        <div class="field-container">
+            <label class="custom-field">
+                <span class="custom-field__label product-search">Продукт</span>
+                <input type="text" class="custom-field__input js-product-search product-search__input" name="product-search" id="id_product-search" placeholder="Поиск товара по названию" autocomplete="off" data-url="{% url 'shop:product-json-search' %}" />
+                <div class="product-search__suggestions"></div>
+            </label>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+<script>
+    const searchProductInput = document.querySelector('.js-product-search');
+    const productSuggestionsBox = document.querySelector('.product-search__suggestions');
+
+    const setProductCategoryForm = document.querySelector('#set-category');
+    const productInput = setProductCategoryForm.querySelector('#id_product');
+    let debounceTimeout;
+
+    if (searchProductInput) {
+        searchProductInput.addEventListener('input', function () {
+            const query = this.value;
+            const queryUrl = this.dataset.url;
+            console.log(`${queryUrl}?q=${encodeURIComponent(query)}`)
+    
+            clearTimeout(debounceTimeout);
+    
+            if (!query || query.length < 3) {
+                productSuggestionsBox.innerHTML = '';
+                return;
+            }
+    
+            debounceTimeout = setTimeout(() => {
+                fetch(`${queryUrl}?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        productSuggestionsBox.innerHTML = '';
+    
+                        data.forEach(product => {
+                            const div = document.createElement('div');
+                            div.textContent = product.name;
+                            div.dataset.product_id = product.id;
+                            div.classList.add('product-search__suggestion-item');
+                            div.addEventListener('click', () => {
+                                console.log(div)
+                                const product_id = div.dataset.product_id;
+                                productInput.value = product_id;
+                                searchProductInput.value = div.textContent;
+                                setProcustCategory(product_id)
+
+                            });
+                            productSuggestionsBox.appendChild(div);
+                        });
+                    });
+            }, 300);
+        });
+    
+    
+        searchProductInput.addEventListener('blur', () => {
+            setTimeout(() => productSuggestionsBox.innerHTML = '', 150);
+        });
+
+        function setProcustCategory(product_id) {
+            let formUrl = setProductCategoryForm.action.replace("/product/0/", `/product/${product_id}/`)
+            const formData = new FormData(setProductCategoryForm);
+            fetch(formUrl, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status && data.status === "changed") {
+                    setProductCategoryForm.reset();
+                    searchProductInput.value = "";
+                }
+            });
+        }
+
+    };
+
+</script>
+{% endblock script %}

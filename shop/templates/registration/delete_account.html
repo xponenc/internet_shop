@@ -15,7 +15,7 @@
         <p>Вы уверены, что хотите удалить свой аккаунт? Это действие необратимо.</p>
         <form method="post" action="{% url 'app_user:delete_account' %}">
             {% csrf_token %}
-            <button class="user__delete-account btn btn_reset btn_sipmle" type="submit">Отправить письмо с подтверждением</button>
+            <button class="user__delete-account btn btn_reset btn_simple" type="submit">Отправить письмо с подтверждением</button>
         </form>
         <a href="{% url 'app_user:profile'  request.user.pk%}">Вернуться в профиль</a>
     </div>

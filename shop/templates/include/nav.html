@@ -12,9 +12,7 @@
             </li>
             {% if request.user.is_authenticated %}
                 <li class="nav__item">
-                    <a class="nav__link" href="{% url 'app_user:profile'  request.user.pk%}">
-                        {{ request.user.get_full_name|default:request.user.username }} Личный кабинет
-                    </a>
+                    <a class="nav__link" href="{% url 'app_user:profile'  request.user.pk%}">Личный кабинет</a>
                 </li>
                 <li class="nav__item">
                     <form action="{% url 'app_user:logout'%}" method="POST">
@@ -22,6 +20,9 @@
                         <button class="nav__link" type="submit">Выйти</button>
                     </form>
                 </li>
+                {% if perms.app_shop.add_category %}
+                    <a class="nav__link" href="{% url 'shop:category-create' %}">Новая категория</a>
+                {% endif %}
             {% else %}
             <li class="nav__item">
                 <a class="nav__link" href="{% url 'app_user:login' %}?next={{request.path}}">Войти</a>

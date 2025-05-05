@@ -56,7 +56,10 @@
     --btn-accent-hover-text-color: #eee;
     --btn-hover-border-color: #7c7c7c;
     --btn-hover-bg-color: #111;
-}
+
+    /* блоки */
+    --block-bg-color: #a1c2af;
+    --block-border-color: #58886c;
 
 
 .btns {
@@ -88,9 +91,14 @@
     background-color: transparent;
 }
 
-.btn_sipmle {
+.btn_simple {
     padding: 15px 35px;
     border: 1px solid var(--text-color);
+}
+
+.btn_danger {
+    background-color: #910c0c;
+    color: #eee;
 }
 
 .btn_round {

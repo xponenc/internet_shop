@@ -19,7 +19,7 @@
 <section class="user">
     <div class="user__container container">
         <div class="user__header">
-            <h2 class="user__heading">Профиль пользователя {{ user.get_full_name|default:user.username }}</h2>
+            <h2 class="user__heading">Профиль пользователя {{ user.get_full_name|default:user.email }}</h2>
             {% if "Обычный пользователь" in user.groups.all|join:", " %}
                 <span>Ваш аккаунт проходит проверку, после её завершения вы сможете создать блог</span>
             {% endif %}
@@ -37,7 +37,7 @@
                 <div class="data">
                     <dl class="data__item">
                         <dt class="data__label">Имя пользователя</dt>
-                        <dd class="data__value">{{ user.username }}</dd>
+                        <dd class="data__value">{{ user.email }} {{ user.is_superuser }}</dd>
                     </dl>
                     <dl class="data__item">
                         <dt class="data__label">Имя</dt>
@@ -79,21 +79,10 @@
                             {% endfor %}
                         </dd>
                     </dl>
-                    <dl class="data__item">
-                        <dt class="data__label">Заведено блогов</dt>
-                        <dd class="data__value">{{ user.blog_set.all.count }}</dd>
-                    </dl>
-                    <dl class="data__item">
-                        <dt class="data__label">Опубликовано записей</dt>
-                        <dd class="data__value">{{ user.total_posts }}</dd>
-                    </dl>
                 </div>
                 <div class="btns">
-                    {% if "Верифицированный пользователь" in user.groups.all|join:", " and user.blog_set.count < user.profile.max_blogs %}
-                        <a class="user__new-blog btn btn_reset btn_sipmle" href="{% url 'blogs:blog-create' %}">Создать новый блог</a>
-                    {% endif %} 
-                    <a class="user__delete-account btn btn_reset btn_sipmle" href="{% url 'app_user:delete_account' %}">Удалить аккаунт</a>
-                    <a class="user__delete-account btn btn_reset btn_sipmle" href="{% url 'app_user:change_password' %}">Сменить пароль</a>
+                    <a class="user__delete-account btn btn_reset btn_simple" href="{% url 'app_user:delete_account' %}">Удалить аккаунт</a>
+                    <a class="user__delete-account btn btn_reset btn_simple" href="{% url 'app_user:change_password' %}">Сменить пароль</a>
                 </div>
             </div>
         </div>

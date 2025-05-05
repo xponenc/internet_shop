@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}{% if product %}Редактирование {{ product.name }}{% else %}Создание  товара{% endif %}{% endblock title %}
+
+
+{% block css %}
+<link href="{% static 'css/pagination.css' %}" rel="stylesheet">
+<link href="{% static 'app_shop/css/shop.css' %}" rel="stylesheet">
+{% endblock css %}
+
+
+{% block content %}
+{% comment %} {% if filter_form %}
+    {% include 'include/filter.html' %}
+{% endif %} {% endcomment %}
+<section class="product">
+    <div class="product__container container">
+        <div class="products__header">
+            <h2 class="products__heading">{% if product %}Редактирование {{ product.name }}{% else %}Создание  товара{% endif %}</h2>
+        </div>
+        <form action="" method="POST" class="product__form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Error messaging -->
+            {% if form.errors %}
+            <ul class="form__errors" id="errors_{{ form.prefix }}">
+                <li class="form__error">Форма заполнена некорректно. Пожалуйста, исправьте:</li>
+                {% for error in form.non_field_errors %}
+                    <li class="form__error">{{ error|striptags }}</li>
+                {% endfor %}
+                {% for field in form %}
+                    {% if field.errors %}   
+                        {% for error in field.errors %}
+                        <li class="form__error">{{ field.label }}: {{ error|striptags }}</li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <!-- /Error messaging -->
+            <div class="form__container">
+                {% for field in form %}
+                    {% if field.name != "images" %}
+                        <div class="field-container just-validate-tooltip-container{% if 'custom-field__input_wide' in field.field.widget.attrs.class %} field-container_wide{% endif %}">
+                            {% include "widgets/_custom-field__input-placeholder-widget.html" %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <div class="field-container just-validate-tooltip-container">
+                    <label class="custom-field">
+                        <span class="custom-field__label">изображение</span>
+                        <input type="file" name="images" id="id_images" multiple>
+                    </label>
+                </div>
+            </div>
+            <div class="btns">
+                <button type="submit" class="btn btn_reset btn_simple">
+                    {% if product %}Сохранить{% else %}Создать{% endif %}
+                </button>
+            </div>
+        </form>
+        {% if product %}
+            <ul class="product__imgs">
+                {% for image in product.productimage_set.all %}
+                    <li class="product__img">
+                        <img src="{{ image.file.url }}" alt="Изображение товара {{ product.name }}" class="product-image__image">
+                        <form action="{% url 'shop:product-image-delete' image.pk %}" onsubmit="return deleteProductImage(event, this)">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn_reset btn_simple">Удалить</button>
+                        </form>
+                    </li>            
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block script %}
+<script>
+    function deleteProductImage(event, form) {
+        event.preventDefault();
+    
+        const url = form.action;
+        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        const imageItem = form.closest('.product__img');
+    
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken,
+            },
+            body: new FormData(form),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'deleted') {
+                imageItem.remove();
+            } else {
+                alert(data.message || 'Ошибка при удалении изображения');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при удалении изображения');
+        });
+    
+        return false;
+    }
+    </script>
+{% endblock script %}

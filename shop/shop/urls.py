@@ -26,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app_user.urls', namespace='app_user')),
     path('', include('app_shop.urls')),
+    path("", RedirectView.as_view(url=reverse_lazy("shop:products"))),
 ] + debug_toolbar_urls()
 
 if settings.DEBUG:

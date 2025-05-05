@@ -1,7 +1,65 @@
 from django import forms
 from django.contrib.auth import password_validation
 
-from app_shop.models import Category
+from app_shop.models import Category, Product, ProductImage
+
+
+class CategoryForm(forms.ModelForm):
+    """Форма создания/изменения Категории :models:app_shop.Category"""
+
+    class Meta:
+        model = Category
+        exclude = ["deleted_at", ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['parent'].widget.attrs.update({
+            'class': 'custom-field__input',
+            'placeholder': '',
+        })
+        self.fields['name'].widget.attrs.update({
+            'class': 'custom-field__input',
+            'placeholder': ' ',
+        })
+
+
+class ProductForm(forms.ModelForm):
+    """Форма создания/изменения Товара :models:app_shop.Product"""
+
+    images = forms.FileField(widget=forms.FileInput(), required=False,
+                             label="изображение")
+
+    class Meta:
+        model = Product
+        exclude = ["author", "created_at", "updated_at", "deleted_at"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].widget.attrs.update({
+            'class': 'custom-field__input',
+            'placeholder': '',
+        })
+        self.fields['name'].widget.attrs.update({
+            'class': 'custom-field__input',
+            'placeholder': ' ',
+        })
+        self.fields['price'].widget.attrs.update({
+            'class': 'custom-field__input',
+            'placeholder': ' ',
+        })
+
+        self.fields['description'].widget.attrs.update({
+            'class': 'custom-field__input custom-field__input_wide custom-field__input_textarea',
+            'placeholder': ' ',
+        })
+
+
+class ProductImageCreateForm(forms.ModelForm):
+    """Форма создания Изображения Товара"""
+
+    class Meta:
+        model = ProductImage
+        fields = ["file", ]
 
 
 class ProductFilterForm(forms.Form):
